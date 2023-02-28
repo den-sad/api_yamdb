@@ -40,6 +40,9 @@ class Title(models.Model):
         related_name='titles'
     )
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return self.name
 
@@ -54,6 +57,9 @@ class Category(models.Model):
         max_length=50
     )
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return self.name
 
@@ -67,6 +73,9 @@ class Genre(models.Model):
         unique=True,
         max_length=50
     )
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name
