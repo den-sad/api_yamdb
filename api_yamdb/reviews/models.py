@@ -12,11 +12,10 @@ class User(AbstractUser):
 class Title(models.Model):
     name = models.CharField(
         verbose_name='Название',
-        max_length=255
+        max_length=256
     )
     year = models.IntegerField(
         verbose_name='Год выхода',
-        max_length=4
     )
     rating = models.IntegerField(
         verbose_name='Рейтинг',
@@ -30,6 +29,7 @@ class Title(models.Model):
         'Genre',
         verbose_name='Жанр',
         on_delete=models.SET_NULL,
+        null=True,
         related_name='titles'
     )
     category = models.ForeignKey(
@@ -38,6 +38,34 @@ class Title(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='titles'
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class Category(models.Model):
+    name = models.CharField(
+        verbose_name='Наименование категории',
+        max_length=256
+    )
+    slug = models.SlugField(
+        unique=True,
+        max_length=50
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class Genre(models.Model):
+    name = models.CharField(
+        verbose_name='Наименование жанра',
+        max_length=256
+    )
+    slug = models.SlugField(
+        unique=True,
+        max_length=50
     )
 
     def __str__(self):
