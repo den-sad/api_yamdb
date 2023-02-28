@@ -19,7 +19,7 @@ class Title(models.Model):
     )
     rating = models.IntegerField(
         verbose_name='Рейтинг',
-        default=None
+        null=True
     )
     description = models.TextField(
         verbose_name='Краткое описание',
@@ -28,7 +28,8 @@ class Title(models.Model):
     genre = models.ManyToManyField(
         'Genre',
         verbose_name='Жанр',
-        related_name='titles'
+        related_name='titles',
+        blank=True
     )
     category = models.ForeignKey(
         'Category',
