@@ -1,7 +1,6 @@
 from rest_framework import serializers
-
-from reviews.models import User
-from reviews.models import Comment, Review, User
+from rest_framework.relations import SlugRelatedField
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,3 +47,52 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        exclude = ['id']
+        model = Category
+
+
+class GenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        exclude = ['id']
+        model = Genre
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    #genre = SlugRelatedField(
+    #    slug_field='slug',
+    #    many=True,
+    #    queryset=Genre.objects.all()
+    #)
+
+    class Meta:
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
+        model = Title
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    #category = CategorySerializer(required=False)
+    #genre = GenreSerializer(required=False, many=True)
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = SlugRelatedField(
+        slug_field='slug',
+        many=True,
+        queryset=Genre.objects.all()
+    )
+
+    class Meta:
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
+        model = Title

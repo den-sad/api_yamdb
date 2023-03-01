@@ -1,18 +1,19 @@
 
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
-from reviews.models import User, Comment, Review, Title
-
-from .permissions import isAdministrator, isSuperuser, IsOwnerOrModeratorOrAdmin
-from .serializers import UserSerializer, CommentSerializer, ReviewSerializer
+from .permissions import (IsOwnerOrModeratorOrAdmin, isAdministrator,
+                          isSuperuser)
 from .rating import update_rating
-
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, TitleSerializer,
+                          TitleWriteSerializer, UserSerializer)
 
 
 def signup(request):
@@ -101,3 +102,23 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get("review_id")
         new_queryset = Comment.objects.filter(review=review_id)
         return new_queryset
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleSerializer
+        return TitleWriteSerializer
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
