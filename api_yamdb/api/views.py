@@ -1,14 +1,59 @@
+
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import filters, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from reviews.models import Comment, Review, Title
 
-from .permissions import IsOwnerOrModeratorOrAdmin
+from reviews.models import User, Comment, Review, Title
+
+from .permissions import isAdministrator, isSuperuser, IsOwnerOrModeratorOrAdmin
+from .serializers import UserSerializer, CommentSerializer, ReviewSerializer
 from .rating import update_rating
-from .serializers import CommentSerializer, ReviewSerializer
 
 
+
+def signup(request):
+    pass
+
+
+def token(request):
+    pass
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
+    permission_classes = [isAdministrator | isSuperuser]
+    queryset = User.objects.all()
+    lookup_field = ('username')
+
+    serializer_class = UserSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('username',)
+    search_fields = ('username',)
+
+    @action(
+        detail=False,
+        methods=('GET', 'PATCH'),
+        permission_classes=(permissions.IsAuthenticated,)
+    )
+    def me(self, request):
+        if request.method == 'GET':
+            serializer = UserSerializer(request.user)
+            return Response(serializer.data)
+        serializer = UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=request.user.role)
+        return Response(serializer.data)
+        
+        
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     throttle_classes = (ScopedRateThrottle,)
