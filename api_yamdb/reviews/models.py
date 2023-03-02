@@ -77,6 +77,40 @@ class Title(models.Model):
         return self.name
 
 
+class Category(models.Model):
+    name = models.CharField(
+        verbose_name='Наименование категории',
+        max_length=256
+    )
+    slug = models.SlugField(
+        unique=True,
+        max_length=50
+    )
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class Genre(models.Model):
+    name = models.CharField(
+        verbose_name='Наименование жанра',
+        max_length=256
+    )
+    slug = models.SlugField(
+        unique=True,
+        max_length=50
+    )
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Review(models.Model):
     text = models.TextField(
         'Текст отзыва',
@@ -141,37 +175,3 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-
-
-class Category(models.Model):
-    name = models.CharField(
-        verbose_name='Наименование категории',
-        max_length=256
-    )
-    slug = models.SlugField(
-        unique=True,
-        max_length=50
-    )
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-
-class Genre(models.Model):
-    name = models.CharField(
-        verbose_name='Наименование жанра',
-        max_length=256
-    )
-    slug = models.SlugField(
-        unique=True,
-        max_length=50
-    )
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
