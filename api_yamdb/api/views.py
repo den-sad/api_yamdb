@@ -107,19 +107,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, id=title_id)
         user = self.request.user
-        serializer.save(
-            author=user, title=title)
-        update_rating(title_id)
+        serializer.save(author=user, title=title)
+        update_rating(title)
 
     def perform_update(self, serializer):
-        title_id = self.kwargs.get("title_id")
         super(ReviewViewSet, self).perform_update(serializer)
-        update_rating(title_id)
+        update_rating(serializer.instance.title)
 
-    def perform_destroy(self, serializer):
-        title_id = self.kwargs.get("title_id")
-        super(ReviewViewSet, self).perform_destroy(serializer)
-        update_rating(title_id)
+    def perform_destroy(self, instance):
+        super(ReviewViewSet, self).perform_destroy(instance)
+        update_rating(instance.title)
 
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
