@@ -109,7 +109,12 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
-    # permission_classes = (isAdministrator, )
+    permission_classes = (isAdministrator, )
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return (permissions.IsAuthenticatedOrReadOnly(),)
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -135,4 +140,9 @@ class GenreViewSet(viewsets.ModelViewSet):
     serializer_class = GenreSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    # permission_classes = (isAdministrator, )
+    permission_classes = (isAdministrator, )
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return (permissions.IsAuthenticatedOrReadOnly(),)
+        return super().get_permissions()
