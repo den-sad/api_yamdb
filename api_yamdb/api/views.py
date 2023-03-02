@@ -139,12 +139,16 @@ class CategoryViewSet(mixins.CreateModelMixin,
         return super().get_permissions()
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.CreateModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     permission_classes = (isAdministrator, )
+    lookup_field = 'slug'
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
