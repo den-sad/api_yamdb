@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
+from .validators import validate_year
+
 
 class User(AbstractUser):
     ROLES_CHOISES = [
@@ -43,6 +45,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         verbose_name='Год выхода',
+        validators=[validate_year]
     )
     rating = models.IntegerField(
         verbose_name='Рейтинг',
