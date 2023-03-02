@@ -107,6 +107,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', 'year')
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
