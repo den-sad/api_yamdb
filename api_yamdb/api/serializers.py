@@ -12,6 +12,18 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
 
+class RegisterUserSerializer(serializers.ModelSerializer):
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                "Username me запрещен")
+        return value
+
+    class Meta:
+        fields = ('username', 'email')
+        model = User
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         queryset=User.objects.all(),
