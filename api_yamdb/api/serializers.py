@@ -66,6 +66,7 @@ class GenreSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
         extra_kwargs = {'url': {'lookup_field': 'slug'}}
 
+
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)

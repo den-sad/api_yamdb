@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
+from .filters import TitleSlugFilter
 from .permissions import (IsOwnerOrModeratorOrAdmin, isAdministrator,
                           isSuperuser)
 from .rating import update_rating
@@ -108,8 +109,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
-    permission_classes = (isAdministrator, )
+    filterset_class = TitleSlugFilter
+    permission_classes = (isAdministrator,)
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -130,7 +131,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     serializer_class = CategorySerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    permission_classes = (isAdministrator, )
+    permission_classes = (isAdministrator,)
     lookup_field = 'slug'
 
     def get_permissions(self):
@@ -147,7 +148,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     serializer_class = GenreSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    permission_classes = (isAdministrator, )
+    permission_classes = (isAdministrator,)
     lookup_field = 'slug'
 
     def get_permissions(self):
