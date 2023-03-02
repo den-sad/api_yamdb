@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
@@ -26,6 +28,8 @@ class User(AbstractUser):
         choices=ROLES_CHOISES,
         default="user",
     )
+    confirmation_code = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True)
 
     REQUIRED_FIELDS = ['email']
 

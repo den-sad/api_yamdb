@@ -10,8 +10,20 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
         model = User
-        
-        
+
+
+class RegisterUserSerializer(serializers.ModelSerializer):
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                "Username me запрещен")
+        return value
+
+    class Meta:
+        fields = ('username', 'email')
+        model = User
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         queryset=User.objects.all(),
@@ -48,6 +60,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
 
+
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -65,11 +78,11 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    #genre = SlugRelatedField(
+    # genre = SlugRelatedField(
     #    slug_field='slug',
     #    many=True,
     #    queryset=Genre.objects.all()
-    #)
+    # )
 
     class Meta:
         fields = (
@@ -79,8 +92,8 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    #category = CategorySerializer(required=False)
-    #genre = GenreSerializer(required=False, many=True)
+    # category = CategorySerializer(required=False)
+    # genre = GenreSerializer(required=False, many=True)
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all()
