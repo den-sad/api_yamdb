@@ -70,6 +70,8 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ['id']
         model = Category
+        lookup_field = 'slug'
+        extra_kwargs = {'url': {'lookup_field': 'slug'}}
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -77,16 +79,13 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ['id']
         model = Genre
+        lookup_field = 'slug'
+        extra_kwargs = {'url': {'lookup_field': 'slug'}}
 
 
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    # genre = SlugRelatedField(
-    #    slug_field='slug',
-    #    many=True,
-    #    queryset=Genre.objects.all()
-    # )
 
     class Meta:
         fields = (
@@ -96,8 +95,6 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    # category = CategorySerializer(required=False)
-    # genre = GenreSerializer(required=False, many=True)
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all()

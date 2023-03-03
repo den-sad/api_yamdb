@@ -11,14 +11,15 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
+from .filters import TitleSlugFilter
+from .mixins import ListCreateDestroyViewSet
 from .permissions import (IsOwnerOrModeratorOrAdmin, isAdministrator,
-                          isSuperuser)
+                          isAdministratorOrReadOnly, isSuperuser)
 from .rating import update_rating
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterUserSerializer,
                           ReviewSerializer, TitleSerializer,
-                          TitleWriteSerializer, UserSerializer
-                          )
+                          TitleWriteSerializer, UserSerializer)
 
 
 @api_view(['POST'])
@@ -146,6 +147,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleSlugFilter
+    permission_classes = (isAdministratorOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -153,11 +157,19 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleWriteSerializer
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ('name',)
+    permission_classes = (isAdministratorOrReadOnly,)
+    lookup_field = 'slug'
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(ListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ('name',)
+    permission_classes = (isAdministratorOrReadOnly,)
+    lookup_field = 'slug'
