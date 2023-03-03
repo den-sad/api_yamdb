@@ -14,7 +14,7 @@ from reviews.models import Category, Comment, Genre, Review, Title, User
 
 from .filters import TitleSlugFilter
 from .permissions import (IsOwnerOrModeratorOrAdmin, isAdministrator,
-                          isSuperuser)
+                          isAdministratorOrReadOnly, isSuperuser)
 from .rating import update_rating
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterUserSerializer,
@@ -149,12 +149,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleSlugFilter
-    permission_classes = (isAdministrator,)
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return (permissions.IsAuthenticatedOrReadOnly(),)
-        return super().get_permissions()
+    permission_classes = (isAdministratorOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -170,13 +165,8 @@ class CategoryViewSet(mixins.CreateModelMixin,
     serializer_class = CategorySerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    permission_classes = (isAdministrator,)
+    permission_classes = (isAdministratorOrReadOnly,)
     lookup_field = 'slug'
-
-    def get_permissions(self):
-        if self.action == 'list':
-            return (permissions.IsAuthenticatedOrReadOnly(),)
-        return super().get_permissions()
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -187,10 +177,5 @@ class GenreViewSet(mixins.CreateModelMixin,
     serializer_class = GenreSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    permission_classes = (isAdministrator,)
+    permission_classes = (isAdministratorOrReadOnly,)
     lookup_field = 'slug'
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return (permissions.IsAuthenticatedOrReadOnly(),)
-        return super().get_permissions()
