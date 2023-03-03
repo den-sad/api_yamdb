@@ -12,6 +12,18 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
 
+class RegisterUserSerializer(serializers.ModelSerializer):
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                "Username me запрещен")
+        return value
+
+    class Meta:
+        fields = ('username', 'email')
+        model = User
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         queryset=User.objects.all(),
@@ -23,12 +35,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        author = data['author']
-        title = self.context['view'].kwargs.get("title_id")
-        reviews = Review.objects.filter(author=author, title=title)
-        if reviews and self.context['request'].method == 'POST':
-            raise serializers.ValidationError(
-                'Повторный отзыв невозможен!')
+        if self.context['request'].method == 'POST':
+            if 'author' not in data:
+                raise serializers.ValidationError(
+                    'Неизвестный автор!')
+            author = data['author']
+            title = self.context['view'].kwargs.get("title_id")
+            reviews = Review.objects.filter(author=author, title=title)
+            if reviews:
+                raise serializers.ValidationError(
+                    'Повторный отзыв невозможен!')
         return data
 
     def validate_score(self, score):
@@ -47,6 +63,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
+
 
 
 class CategorySerializer(serializers.ModelSerializer):

@@ -1,11 +1,15 @@
-
+from django.conf import settings
+from django.core import mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, permissions, viewsets
-from rest_framework.decorators import action
+from rest_framework import (filters, mixins, permissions, serializers, status,
+                            viewsets)
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
+from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 from .filters import TitleSlugFilter
@@ -13,16 +17,55 @@ from .permissions import (IsOwnerOrModeratorOrAdmin, isAdministrator,
                           isSuperuser)
 from .rating import update_rating
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer, TitleSerializer,
+                          GenreSerializer, RegisterUserSerializer,
+                          ReviewSerializer, TitleSerializer,
                           TitleWriteSerializer, UserSerializer)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def signup(request):
-    pass
+    if request.method == 'POST':
+        serializer = RegisterUserSerializer(data=request.data)
+        username = request.data.get('username', None)
+        email = request.data.get('email', None)
+        user = User.objects.filter(username=username).first()
+        if user:
+            if email != user.email:
+                raise serializers.ValidationError(
+                    {'email': 'Несоответсвие email у пользователя'})
+            return Response(request.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            user = serializer.save()
+            subject = 'Ваш код подтверждения для регистрации'
+            message = f'Ваш код: {user.confirmation_code}'
+            mail.send_mail(subject=subject,
+                           message=message,
+                           from_email=settings.EMAIL,
+                           recipient_list=[user.email, ])
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def token(request):
-    pass
+    if request.method == 'POST':
+        username = request.data.get('username', None)
+        confirmation_code = request.data.get('confirmation_code', None)
+        if not username or not confirmation_code:
+            return Response({'username': username},
+                            status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.filter(username=username).first()
+        if user:
+            if confirmation_code != str(user.confirmation_code):
+                raise serializers.ValidationError(
+                    {'confirmation_code': 'Неверный код подтверждения'}
+                )
+            token = AccessToken.for_user(user).get('jti')
+            return Response({'token': token}, status=status.HTTP_200_OK)
+        return Response({'username': username},
+                        status=status.HTTP_404_NOT_FOUND)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -30,7 +73,6 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [isAdministrator | isSuperuser]
     queryset = User.objects.all()
     lookup_field = ('username')
-
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
@@ -66,19 +108,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, id=title_id)
         user = self.request.user
-        serializer.save(
-            author=user, title=title)
-        update_rating(title_id)
+        serializer.save(author=user, title=title)
+        update_rating(title)
 
     def perform_update(self, serializer):
-        title_id = self.kwargs.get("title_id")
         super(ReviewViewSet, self).perform_update(serializer)
-        update_rating(title_id)
+        update_rating(serializer.instance.title)
 
-    def perform_destroy(self, serializer):
-        title_id = self.kwargs.get("title_id")
-        super(ReviewViewSet, self).perform_destroy(serializer)
-        update_rating(title_id)
+    def perform_destroy(self, instance):
+        super(ReviewViewSet, self).perform_destroy(instance)
+        update_rating(instance.title)
 
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
