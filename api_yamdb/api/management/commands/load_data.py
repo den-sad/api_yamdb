@@ -1,65 +1,95 @@
 from csv import DictReader
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from reviews.models import Category, Comment, Genre, Review, Title, User
-
-ALREDY_LOADED_ERROR_MESSAGE = """
-Если надо перезалить данные из CSV файла,
-то сначала надо удалить файл базы db.sqlite3.
-Затем запустить `python manage.py migrate` для
-новой пустой базы с таблицами.
-"""
-
-models = [Category, Genre, Comment, Review, Title, User]
 
 
 class Command(BaseCommand):
-    help = "Загружает данные из category.csv"
+    help = "Загружает данные из файлов csv"
 
     def handle(self, *args, **options):
-        # Проверка на то, что в базе еще нет данных
-        for model in models:
-            if model.objects.exists():
-                print(f'Данные в таблицу {model} уже загружены.')
-                print(ALREDY_LOADED_ERROR_MESSAGE)
-                return
 
-        print("Загрузка данных")
+        print("Идет загрузка данных")
         # Код загрузки
-        for row in DictReader(open('./static/data/users.csv')):
-            table = User(
-                id=row['id'], username=row['username'], email=row['email'],
-                bio=row['bio'], role=row['role'], first_name=row['first_name'],
-                last_name=row['last_name']
-            )
-            table.save()
+        with open("static/data/users.csv", newline='') as csvfile:
+            reader = DictReader(csvfile)
+            for row in reader:
+                try:
+                    User.objects.update_or_create(
+                        id=row['id'], username=row['username'],
+                        email=row['email'], bio=row['bio'], role=row['role'],
+                        first_name=row['first_name'],
+                        last_name=row['last_name']
+                    )
+                except Exception as error:
+                    raise CommandError(
+                        f'Ошибка записи в таблице модели User, {str(error)}'
+                    )
 
-        for row in DictReader(open('./static/data/category.csv')):
-            table = Category(id=row['id'], name=row['name'], slug=row['slug'])
-            table.save()
+        with open("static/data/category.csv", newline='') as csvfile:
+            reader = DictReader(csvfile)
+            for row in reader:
+                try:
+                    Category.objects.update_or_create(
+                        id=row['id'], name=row['name'], slug=row['slug']
+                    )
+                except Exception as error:
+                    raise CommandError(
+                        f'Ошибка записи в таблице модели Category, '
+                        f'{str(error)}, в строке {row}'
+                    )
 
-        for row in DictReader(open('./static/data/genre.csv')):
-            table = Genre(id=row['id'], name=row['name'], slug=row['slug'])
-            table.save()
+        with open("static/data/genre.csv", newline='') as csvfile:
+            reader = DictReader(csvfile)
+            for row in reader:
+                try:
+                    Genre.objects.update_or_create(
+                        id=row['id'], name=row['name'], slug=row['slug']
+                    )
+                except Exception as error:
+                    raise CommandError(
+                        f'Ошибка записи в таблице модели Genre, {str(error)}'
+                    )
 
-        for row in DictReader(open('./static/data/titles.csv')):
-            table = Title(
-                id=row['id'], name=row['name'], year=row['year'],
-                category_id=int(row['category'])
-            )
-            table.save()
+        with open("static/data/titles.csv", newline='') as csvfile:
+            reader = DictReader(csvfile)
+            for row in reader:
+                try:
+                    Title.objects.update_or_create(
+                        id=row['id'], name=row['name'], year=row['year'],
+                        category_id=int(row['category'])
+                    )
+                except Exception as error:
+                    raise CommandError(
+                        f'Ошибка записи в таблице модели Title, {str(error)}'
+                    )
 
-        for row in DictReader(open('./static/data/review.csv')):
-            table = Review(
-                id=row['id'], text=row['text'], author_id=row['author'],
-                score=row['score'], title_id=row['title_id'],
-                pub_date=row['pub_date']
-            )
-            table.save()
+        with open("static/data/review.csv", newline='') as csvfile:
+            reader = DictReader(csvfile)
+            for row in reader:
+                try:
+                    Review.objects.update_or_create(
+                        id=row['id'], text=row['text'],
+                        author_id=row['author'], score=row['score'],
+                        title_id=row['title_id'], pub_date=row['pub_date']
+                    )
+                except Exception as error:
+                    raise CommandError(
+                        f'Ошибка записи в таблице модели Review, {str(error)}'
+                    )
 
-        for row in DictReader(open('./static/data/comments.csv')):
-            table = Comment(
-                id=row['id'], review_id=row['review_id'], text=row['text'],
-                author_id=row['author'], pub_date=row['pub_date']
-            )
-            table.save()
+        with open("static/data/comments.csv", newline='') as csvfile:
+            reader = DictReader(csvfile)
+            for row in reader:
+                try:
+                    Comment.objects.update_or_create(
+                        id=row['id'], review_id=row['review_id'],
+                        text=row['text'], author_id=row['author'],
+                        pub_date=row['pub_date']
+                    )
+                except Exception as error:
+                    raise CommandError(
+                        f'Ошибка записи в таблице модели Comment, {str(error)}'
+                    )
+
+        print('Загрука завершена.')
