@@ -7,10 +7,7 @@ from reviews.models import Category, Comment, Genre, Review, Title, User
 class Command(BaseCommand):
     help = "Загружает данные из файлов csv"
 
-    def handle(self, *args, **options):
-
-        print("Идет загрузка данных")
-        # Код загрузки
+    def users_loader(self):
         with open("static/data/users.csv", newline='') as csvfile:
             reader = DictReader(csvfile)
             for row in reader:
@@ -26,6 +23,7 @@ class Command(BaseCommand):
                         f'Ошибка записи в таблице модели User, {str(error)}'
                     )
 
+    def category_loader(self):
         with open("static/data/category.csv", newline='') as csvfile:
             reader = DictReader(csvfile)
             for row in reader:
@@ -39,6 +37,7 @@ class Command(BaseCommand):
                         f'{str(error)}, в строке {row}'
                     )
 
+    def genre_loader(self):
         with open("static/data/genre.csv", newline='') as csvfile:
             reader = DictReader(csvfile)
             for row in reader:
@@ -51,6 +50,7 @@ class Command(BaseCommand):
                         f'Ошибка записи в таблице модели Genre, {str(error)}'
                     )
 
+    def title_loader(self):
         with open("static/data/titles.csv", newline='') as csvfile:
             reader = DictReader(csvfile)
             for row in reader:
@@ -64,6 +64,7 @@ class Command(BaseCommand):
                         f'Ошибка записи в таблице модели Title, {str(error)}'
                     )
 
+    def review_loader(self):
         with open("static/data/review.csv", newline='') as csvfile:
             reader = DictReader(csvfile)
             for row in reader:
@@ -78,6 +79,7 @@ class Command(BaseCommand):
                         f'Ошибка записи в таблице модели Review, {str(error)}'
                     )
 
+    def comments_loader(self):
         with open("static/data/comments.csv", newline='') as csvfile:
             reader = DictReader(csvfile)
             for row in reader:
@@ -91,5 +93,27 @@ class Command(BaseCommand):
                     raise CommandError(
                         f'Ошибка записи в таблице модели Comment, {str(error)}'
                     )
+
+    def handle(self, *args, **options):
+
+        print("Идет загрузка данных")
+
+        print("Загружаем данные пользователей")
+        self.users_loader()
+
+        print("Загружаем категории")
+        self.category_loader()
+
+        print("Загружаем жанры")
+        self.genre_loader()
+
+        print("Загружаем произведения")
+        self.title_loader()
+
+        print("Загружаем ревью")
+        self.review_loader()
+
+        print("Загружаем комментарии")
+        self.comments_loader()
 
         print('Загрука завершена.')
