@@ -8,7 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 from .filters import TitleSlugFilter
@@ -62,7 +62,7 @@ def token(request):
                 raise serializers.ValidationError(
                     {'confirmation_code': 'Неверный код подтверждения'}
                 )
-            token = AccessToken.for_user(user).get('jti')
+            token = str(RefreshToken.for_user(user).access_token)
             return Response({'token': token}, status=status.HTTP_200_OK)
         return Response({'username': username},
                         status=status.HTTP_404_NOT_FOUND)
