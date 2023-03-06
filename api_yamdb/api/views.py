@@ -145,6 +145,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    # Рейтинг автоматически рассчитывается при добавлении/
+    # изменении/удалении review. См. ReviewViewSet, rating.py
     queryset = (
         Title.objects.select_related('category')
         .prefetch_related('genre').all()
