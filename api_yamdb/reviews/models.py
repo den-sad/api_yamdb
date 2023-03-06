@@ -1,7 +1,8 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
 from django.db import models
 
 from .validators import validate_year
@@ -125,7 +126,10 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Автор'
     )
-    score = models.IntegerField('Оценка')
+    score = models.PositiveSmallIntegerField(
+        'Оценка',
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(10)])
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -137,7 +141,7 @@ class Review(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
 
     def __str__(self):
-        return self.text
+        return self.text[:15]
 
     class Meta:
         constraints = [
@@ -173,7 +177,7 @@ class Comment(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
 
     def __str__(self):
-        return self.text
+        return self.text[:15]
 
     class Meta:
         ordering = ('-pub_date',)

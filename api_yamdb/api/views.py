@@ -121,7 +121,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
-        new_queryset = Review.objects.filter(title=title_id)
+        new_queryset = Review.objects.select_related(
+            'title').filter(title=title_id)
         return new_queryset
 
 
@@ -140,7 +141,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review_id = self.kwargs.get("review_id")
-        new_queryset = Comment.objects.filter(review=review_id)
+        new_queryset = Comment.objects.select_related(
+            'review').filter(review=review_id)
         return new_queryset
 
 
