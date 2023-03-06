@@ -52,7 +52,8 @@ class Command(BaseCommand):
                         err += 1
                 i += 1
             print(
-                f'Всего: {i-1} строк. Загружено: {r} строк. Ошибки: {err} строк.')
+                f'Всего: {i-1} строк. Загружено: {r} строк. '
+                f'Ошибки: {err} строк.')
 
     def update_all_title_rating(self):
         titles = Title.objects.all()
