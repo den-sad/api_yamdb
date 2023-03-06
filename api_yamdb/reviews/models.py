@@ -48,6 +48,7 @@ class Title(models.Model):
         max_length=256
     )
     year = models.IntegerField(
+        db_index=True,
         verbose_name='Год выхода',
         validators=[validate_year]
     )
