@@ -27,15 +27,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
 def signup(request):
     if request.method == 'POST':
         serializer = RegisterUserSerializer(data=request.data)
-        username = request.data.get('username', None)
-        email = request.data.get('email', None)
-        user = User.objects.filter(username=username).first()
-        if user:
-            if email != user.email:
-                raise serializers.ValidationError(
-                    {'email': 'Несоответсвие email у пользователя'})
-            return Response(request.data, status=status.HTTP_200_OK)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             user = serializer.save()
             subject = 'Ваш код подтверждения для регистрации'
             message = f'Ваш код: {user.confirmation_code}'
@@ -121,7 +113,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
-        new_queryset = Review.objects.filter(title=title_id)
+        new_queryset = Review.objects.select_related(
+            'author').filter(title=title_id)
         return new_queryset
 
 
@@ -140,12 +133,18 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review_id = self.kwargs.get("review_id")
-        new_queryset = Comment.objects.filter(review=review_id)
+        new_queryset = Comment.objects.select_related(
+            'author').filter(review=review_id)
         return new_queryset
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    # Рейтинг автоматически рассчитывается при добавлении/
+    # изменении/удалении review. См. ReviewViewSet, rating.py
+    queryset = (
+        Title.objects.select_related('category')
+        .prefetch_related('genre').all()
+    )
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleSlugFilter

@@ -1,18 +1,23 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
 from django.db import models
 
 from .validators import validate_year
 
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
+
 
 class User(AbstractUser):
-    ROLES_CHOISES = [
-        ("user", "user"),
-        ("moderator", "moderator"),
-        ("admin", "admin"),
-    ]
+    ROLES_CHOISES = (
+        (USER, 'Пользователь'),
+        (MODERATOR, 'Модератор'),
+        (ADMIN, 'Администратор'),
+    )
     username = models.CharField(max_length=150, unique=True,
                                 validators=[
                                     RegexValidator(
@@ -26,7 +31,7 @@ class User(AbstractUser):
         blank=True,
     )
     role = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=ROLES_CHOISES,
         default="user",
     )
@@ -38,6 +43,18 @@ class User(AbstractUser):
     class Meta:
         ordering = ['pk']
 
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
     def __str__(self):
         return self.username
 
@@ -48,6 +65,7 @@ class Title(models.Model):
         max_length=256
     )
     year = models.IntegerField(
+        db_index=True,
         verbose_name='Год выхода',
         validators=[validate_year]
     )
@@ -125,7 +143,10 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Автор'
     )
-    score = models.IntegerField('Оценка')
+    score = models.PositiveSmallIntegerField(
+        'Оценка',
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(10)])
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -137,7 +158,7 @@ class Review(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
 
     def __str__(self):
-        return self.text
+        return self.text[:15]
 
     class Meta:
         constraints = [
@@ -173,7 +194,7 @@ class Comment(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
 
     def __str__(self):
-        return self.text
+        return self.text[:15]
 
     class Meta:
         ordering = ('-pub_date',)
