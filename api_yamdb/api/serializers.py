@@ -1,6 +1,7 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.relations import SlugRelatedField
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from .exceptions import CustomValidationExeption
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -13,11 +14,39 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
-    def validate_username(self, value):
-        if value.lower() == 'me':
+    regex = '^[\\w.@+-]+\\Z'
+    username = serializers.RegexField(
+        regex, max_length=150, min_length=1, allow_blank=False)
+    email = serializers.EmailField(max_length=254, allow_blank=False)
+
+    def validate(self, data):
+        username = data['username']
+        email = data['email']
+
+        if username.lower() == 'me':
             raise serializers.ValidationError(
                 "Username me запрещен")
-        return value
+        user_by_username = User.objects.filter(username=username).first()
+        if user_by_username:
+            if user_by_username.email != email:
+                raise CustomValidationExeption(
+                    detail="email не соотвествует username",
+                    field='email',
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+            raise CustomValidationExeption(
+                detail=username,
+                field='username',
+                status_code=status.HTTP_200_OK
+            )
+        user_by_email = User.objects.filter(email=email).first()
+        if user_by_email and (user_by_email.username != username):
+            raise CustomValidationExeption(
+                detail="username не соотвествует email",
+                field='username',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        return data
 
     class Meta:
         fields = ('username', 'email')
