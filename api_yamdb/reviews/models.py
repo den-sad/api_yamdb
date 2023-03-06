@@ -6,13 +6,17 @@ from django.db import models
 
 from .validators import validate_year
 
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
+
 
 class User(AbstractUser):
-    ROLES_CHOISES = [
-        ("user", "user"),
-        ("moderator", "moderator"),
-        ("admin", "admin"),
-    ]
+    ROLES_CHOISES = (
+        (USER, 'Пользователь'),
+        (MODERATOR, 'Модератор'),
+        (ADMIN, 'Администратор'),
+    )
     username = models.CharField(max_length=150, unique=True,
                                 validators=[
                                     RegexValidator(
@@ -26,7 +30,7 @@ class User(AbstractUser):
         blank=True,
     )
     role = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=ROLES_CHOISES,
         default="user",
     )
@@ -37,6 +41,18 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ['pk']
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
 
     def __str__(self):
         return self.username
