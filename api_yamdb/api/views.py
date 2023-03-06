@@ -27,15 +27,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
 def signup(request):
     if request.method == 'POST':
         serializer = RegisterUserSerializer(data=request.data)
-        username = request.data.get('username', None)
-        email = request.data.get('email', None)
-        user = User.objects.filter(username=username).first()
-        if user:
-            if email != user.email:
-                raise serializers.ValidationError(
-                    {'email': 'Несоответсвие email у пользователя'})
-            return Response(request.data, status=status.HTTP_200_OK)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             user = serializer.save()
             subject = 'Ваш код подтверждения для регистрации'
             message = f'Ваш код: {user.confirmation_code}'
