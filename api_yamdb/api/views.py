@@ -15,7 +15,6 @@ from .filters import TitleSlugFilter
 from .mixins import ListCreateDestroyViewSet
 from .permissions import (IsOwnerOrModeratorOrAdmin, isAdministrator,
                           isAdministratorOrReadOnly, isSuperuser)
-from .rating import update_rating
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterUserSerializer,
                           ReviewSerializer, TitleSerializer,
@@ -101,15 +100,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=title_id)
         user = self.request.user
         serializer.save(author=user, title=title)
-        update_rating(title)
 
     def perform_update(self, serializer):
         super(ReviewViewSet, self).perform_update(serializer)
-        update_rating(serializer.instance.title)
 
     def perform_destroy(self, instance):
         super(ReviewViewSet, self).perform_destroy(instance)
-        update_rating(instance.title)
 
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
