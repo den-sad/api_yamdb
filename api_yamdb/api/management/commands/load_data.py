@@ -1,6 +1,5 @@
 from csv import DictReader
 
-from api.rating import update_rating
 from django.conf import settings as conf_settings
 from django.core.management.base import BaseCommand
 from reviews.models import Category, Comment, Genre, Review, Title, User
@@ -55,19 +54,8 @@ class Command(BaseCommand):
                 f'Всего: {i-1} строк. Загружено: {r} строк. '
                 f'Ошибки: {err} строк.')
 
-    def update_all_title_rating(self):
-        titles = Title.objects.all()
-        for title in titles:
-            try:
-                update_rating(title)
-            except Exception as error:
-                print(f'Ошибка обновления рейтинга произведения '
-                      f'{title.name}, {str(error)}')
-
     def handle(self, *args, **options):
         print("Идет загрузка данных")
         for сf in csv_files:
             self.csv_loader(сf)
-        print("Идет расчет рейтингов.")
-        self.update_all_title_rating()
         print('Загрука завершена.')
