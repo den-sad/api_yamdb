@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Comment, Genre, Review, Title, User
-
 from .filters import TitleSlugFilter
 from .mixins import ListCreateDestroyViewSet
 from .permissions import (IsOwnerOrModeratorOrAdmin, isAdministrator,
@@ -19,7 +18,8 @@ from .rating import update_rating
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterUserSerializer,
                           ReviewSerializer, TitleSerializer,
-                          TitleWriteSerializer, UserSerializer)
+                          TitleWriteSerializer, UserSerializer,
+                          RegisterTokenSerializer)
 
 
 @api_view(['POST'])
@@ -27,37 +27,31 @@ from .serializers import (CategorySerializer, CommentSerializer,
 def signup(request):
     if request.method == 'POST':
         serializer = RegisterUserSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-            subject = 'Ваш код подтверждения для регистрации'
-            message = f'Ваш код: {user.confirmation_code}'
-            mail.send_mail(subject=subject,
-                           message=message,
-                           from_email=settings.EMAIL,
-                           recipient_list=[user.email, ])
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        subject = 'Ваш код подтверждения для регистрации'
+        message = f'Ваш код: {user.confirmation_code}'
+        mail.send_mail(subject=subject,
+                       message=message,
+                       from_email=settings.EMAIL,
+                       recipient_list=[user.email, ])
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def token(request):
     if request.method == 'POST':
-        username = request.data.get('username', None)
-        confirmation_code = request.data.get('confirmation_code', None)
-        if not username or not confirmation_code:
-            return Response({'username': username},
-                            status=status.HTTP_400_BAD_REQUEST)
-        user = User.objects.filter(username=username).first()
-        if user:
-            if confirmation_code != str(user.confirmation_code):
-                raise serializers.ValidationError(
-                    {'confirmation_code': 'Неверный код подтверждения'}
-                )
-            token = str(RefreshToken.for_user(user).access_token)
-            return Response({'token': token}, status=status.HTTP_200_OK)
-        return Response({'username': username},
-                        status=status.HTTP_404_NOT_FOUND)
+        serializer = RegisterTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User, username=serializer.data['username'])
+        if serializer.data['confirmation_code'] != str(user.confirmation_code):
+            raise serializers.ValidationError(
+                {'confirmation_code': 'Неверный код подтверждения'}
+            )
+        token = str(RefreshToken.for_user(user).access_token)
+        return Response({'token': token}, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):
