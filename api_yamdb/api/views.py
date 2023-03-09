@@ -102,12 +102,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         user = self.request.user
         serializer.save(author=user, title=title)
 
-    def perform_update(self, serializer):
-        super(ReviewViewSet, self).perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        super(ReviewViewSet, self).perform_destroy(instance)
-
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
         new_queryset = Review.objects.select_related(
