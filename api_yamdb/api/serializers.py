@@ -1,6 +1,7 @@
 from rest_framework import serializers, status
 from rest_framework.relations import SlugRelatedField
 from reviews.models import Category, Comment, Genre, Review, Title, User
+
 from .exceptions import CustomValidationExeption
 
 
@@ -11,6 +12,16 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
         model = User
+
+
+class RegisterTokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150, min_length=1, allow_blank=False)
+    confirmation_code = serializers.CharField(
+        max_length=150, min_length=1, allow_blank=False)
+
+    class Meta:
+        fields = ('username', 'confirmation_code')
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
@@ -115,6 +126,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = (
@@ -136,6 +148,6 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+            'id', 'name', 'year', 'description', 'genre', 'category'
         )
         model = Title
