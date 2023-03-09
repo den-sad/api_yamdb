@@ -14,6 +14,16 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
 
+class RegisterTokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150, min_length=1, allow_blank=False)
+    confirmation_code = serializers.CharField(
+        max_length=150, min_length=1, allow_blank=False)
+
+    class Meta:
+        fields = ('username', 'confirmation_code')
+
+
 class RegisterUserSerializer(serializers.ModelSerializer):
     regex = '^[\\w.@+-]+\\Z'
     username = serializers.RegexField(
