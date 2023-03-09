@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core import mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, serializers, status, viewsets
@@ -15,7 +16,6 @@ from .filters import TitleSlugFilter
 from .mixins import ListCreateDestroyViewSet
 from .permissions import (IsOwnerOrModeratorOrAdmin, isAdministrator,
                           isAdministratorOrReadOnly, isSuperuser)
-from .rating import update_rating
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterUserSerializer,
                           ReviewSerializer, TitleSerializer,
@@ -101,15 +101,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=title_id)
         user = self.request.user
         serializer.save(author=user, title=title)
-        update_rating(title)
-
-    def perform_update(self, serializer):
-        super(ReviewViewSet, self).perform_update(serializer)
-        update_rating(serializer.instance.title)
-
-    def perform_destroy(self, instance):
-        super(ReviewViewSet, self).perform_destroy(instance)
-        update_rating(instance.title)
 
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
@@ -139,13 +130,11 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    # Рейтинг автоматически рассчитывается при добавлении/
-    # изменении/удалении review. См. ReviewViewSet, rating.py
     queryset = (
         Title.objects.select_related('category')
         .prefetch_related('genre').all()
+        .annotate(rating=Avg('reviews__score'))
     )
-    serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleSlugFilter
     permission_classes = (isAdministratorOrReadOnly,)
